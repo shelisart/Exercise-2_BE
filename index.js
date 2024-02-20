@@ -1,11 +1,15 @@
 const express = require('express');
+const morgan = require('morgan');
 const app = express();
 const port = 3000;
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
 const multer = require('multer');
 const upload = multer({ dest: "asset"});
 const cors = require('cors');
+
+app.use(morgan('tiny'));
 
 //1. middleware body parser
 app.use(bodyParser.urlencoded({ extended: true})); // parse x-www-form-urlencoded
@@ -19,8 +23,15 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "asset")));
 
 //3. middleware untuk file upload
-app.post('/upload', upload.single('file'), (req, res) => {
-    res.send(req.file);
+app.post('/upload', upload.single('unklab'), (req, res) => {
+    const file = req.file;
+    if (file) {
+        const target = path.join(__dirname,"asset", file.originalname);
+        fs.renameSync(file.path, target);
+        res.send("file berhasil diupload");
+    }   else {
+        res.send("file gagal diupload");
+    }
 });
 
 //4. ⁠middleware untuk penanganan CORS
