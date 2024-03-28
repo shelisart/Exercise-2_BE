@@ -1,18 +1,21 @@
 const express = require("express");
 const app = express();
 const port = 3000;
-
 const db = require("./db");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 app.use(express.json());
 
 /*------------------------ koneksi database -----------------------------*/
 app.get("/students", async (req, res) => {
   try {
-    const result = await db.query("SELECT * FROM students");
+    //const result = await db.query("SELECT * FROM students");
+    const result = await prisma.students.findMany();
+    console.log(result);
     res.status(200).json({
       status: "success",
-      data: result.rows,
+      data: result,
     });
   } catch (err) {
     console.error(err);
@@ -20,12 +23,42 @@ app.get("/students", async (req, res) => {
   }
 });
 
+//GET Student by ID
+app.get("/students/:id", async (req, res) => {
+  try {
+    const idStudent = parseInt(req.params.id);
+    const result = await prisma.students.findUnique({
+      where: {
+        id: idStudent,
+      },
+    });
+
+    if (!result) {
+      return res.status(404).json({
+        status: "error",
+        message: "Student tidak ditemukan",
+      });
+    }
+    res.status(202).json({
+      status: "success",
+      data: result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Interval Server Error");
+  }
+});
+
 app.post("/students", async (req, res) => {
   const { name, address } = req.body;
   try {
-    const result = await db.query(
-      `INSERT into students (name, address) values ('${name}', '${address}')`
-    );
+    //    `INSERT into students (name, address) values ('${name}', '${address}')`);
+    await prisma.students.create({
+      data: {
+        name: name,
+        address: address,
+      },
+    });
     res.status(200).json({
       status: "success",
       message: "data berhasil dimasukan",
@@ -38,15 +71,20 @@ app.post("/students", async (req, res) => {
 
 // UPDATE Student by ID
 app.put("/students/:id", async (req, res) => {
-  const { id } = req.params;
+  const idStudent = parseInt(req.params.id);
   const { name, address } = req.body;
   try {
-    const result = await db.query(
-      `UPDATE students SET name = $1, address = $2 WHERE id = $3`,
-      [name, address, id]
-    );
+    const result = await prisma.students.update({
+      where: {
+        id: idStudent,
+      },
+      data: {
+        name: name,
+        address: address,
+      },
+    });
 
-    if (result.rowCount === 0) {
+    if (!result) {
       return res.status(404).json({
         status: "error",
         message: "Student tidak ditemukan",
@@ -64,11 +102,15 @@ app.put("/students/:id", async (req, res) => {
 
 //DELETE Students by id
 app.delete("/students/:id", async (req, res) => {
-  const { id } = req.params;
+  const idStudent = parseInt(req.params.id);
   try {
-    const result = await db.query(`DELETE FROM students WHERE id = $1`, [id]);
+    const result = await prisma.students.delete({
+      where: {
+        id: idStudent,
+      },
+    });
 
-    if (result.rowCount === 0) {
+    if (!result) {
       return res.status(404).json({
         status: "error",
         message: "Student tidak ditemukan",
@@ -78,28 +120,6 @@ app.delete("/students/:id", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Student berhasil dihapus",
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Interval Server Error");
-  }
-});
-
-//GET Student by ID
-app.get("/students/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.query(`SELECT * FROM students WHERE id = $1`, [id]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        status: "error",
-        message: "Student tidak ditemukan",
-      });
-    }
-    res.status(202).json({
-      status: "success",
-      data: result.rows[0],
     });
   } catch (err) {
     console.error(err);
