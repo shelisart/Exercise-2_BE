@@ -1,14 +1,12 @@
+//layer untuk handle request dan response
+//handle validasi body
+
 const express = require("express");
-const app = express();
-const port = 3000;
-const db = require("./db");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../db");
 
-app.use(express.json());
+const router = express.Router;
 
-/*------------------------ koneksi database -----------------------------*/
-app.get("/students", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     //const result = await db.query("SELECT * FROM students");
     const result = await prisma.students.findMany();
@@ -24,7 +22,7 @@ app.get("/students", async (req, res) => {
 });
 
 //GET Student by ID
-app.get("/students/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const idStudent = parseInt(req.params.id);
     const result = await prisma.students.findUnique({
@@ -49,7 +47,7 @@ app.get("/students/:id", async (req, res) => {
   }
 });
 
-app.post("/students", async (req, res) => {
+router.post("/", async (req, res) => {
   const { name, address } = req.body;
   try {
     //    `INSERT into students (name, address) values ('${name}', '${address}')`);
@@ -70,7 +68,7 @@ app.post("/students", async (req, res) => {
 });
 
 // UPDATE Student by ID
-app.put("/students/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   const idStudent = parseInt(req.params.id);
   const { name, address } = req.body;
   try {
@@ -101,7 +99,7 @@ app.put("/students/:id", async (req, res) => {
 });
 
 //DELETE Students by id
-app.delete("/students/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const idStudent = parseInt(req.params.id);
   try {
     const result = await prisma.students.delete({
@@ -127,6 +125,4 @@ app.delete("/students/:id", async (req, res) => {
   }
 });
 
-app.listen(port, () =>
-  console.log(`Server running at http://localhost:${port}`)
-);
+module.exports = router;
