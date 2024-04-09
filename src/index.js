@@ -5,9 +5,9 @@ const db = require("../db");
 
 app.use(express.json());
 
-const studentController = require("./student/student.controller");
+const studentController = require("./Student/student.controllers");
 
-app.use("/student", studentController);
+app.use("/students", studentController);
 
 app.listen(port, () =>
   console.log(`Server running at http://localhost:${port}`)
